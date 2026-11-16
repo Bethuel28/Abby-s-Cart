@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#2e7d32">
+<title>Abby’s Cart</title>
+<style>
+  :root {
+    --green: #2e7d32;
+    --gt: #2e7d32;
+    --green-soft: #e8f5e9;
+    --head: #2e7d32;
+    --ink: #1c1f1d;
+    --muted: #6b726c;
+    --line: #e3e7e3;
+    --bg: #f6f8f6;
+    --card: #ffffff;
+    --field: #ffffff;
+    --ring: #b5bdb6;
+    --danger: #c62828;
+    --navh: 64px;
+    --barh: 0px;
+  }
+  :root[data-theme="dark"] {
+    --green: #2f7d37;
+    --gt: #86d28d;
+    --green-soft: #1d3320;
+    --head: #1b4d21;
+    --ink: #e7ece8;
+    --muted: #98a39b;
+    --line: #2b322d;
+    --bg: #101311;
+    --card: #1a1f1b;
+    --field: #222824;
+    --ring: #55605a;
+    --danger: #ef7b7b;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  body { display: flex; flex-direction: column; padding-top: env(safe-area-inset-top); }
+  header { background: var(--head); color: #fff; padding: 14px 16px 10px; display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+  header h1 { margin: 0; font-size: 20px; font-weight: 650; }
+  header .sub { font-size: 13px; opacity: .85; margin-top: 2px; }
+  header .gear { background: none; border: 0; color: #fff; font-size: 22px; padding: 2px 4px; line-height: 1; }
+  .searchbar { padding: 10px 12px; background: var(--card); border-bottom: 1px solid var(--line); display: flex; gap: 8px; align-items: center; }
+  .searchbar input { flex: 1; min-width: 0; font-size: 16px; padding: 10px 12px; border: 1px solid var(--line);
+    border-radius: 10px; background: var(--bg); color: var(--ink); outline: none; }
+  .searchbar input:focus { border-color: var(--green); }
+  main { flex: 1; overflow-y: auto; padding: 8px 12px 170px; -webkit-overflow-scrolling: touch; }
+  .cat { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--muted); margin: 16px 4px 6px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .row { display: flex; align-items: center; gap: 8px; padding: 9px 10px 9px 12px; border-bottom: 1px solid var(--line); min-height: 54px; }
+  .row:last-child { border-bottom: 0; }
+  .name { flex: 1; font-size: 16px; min-width: 0; overflow-wrap: anywhere; }
+  .unitlbl { font-size: 13px; color: var(--muted); min-width: 22px; }
+  .edit { background: none; border: 0; color: var(--muted); font-size: 18px; padding: 6px; flex: none; }
+  /* collapsible groups */
+  .grp { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; margin-top: 10px; padding: 14px 14px;
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px; color: var(--ink); font-size: 16px; font-weight: 650; }
+  .grp .chev { color: var(--muted); width: 14px; flex: none; }
+  .grp .gname { flex: 1; }
+  .grp .gcount { color: var(--muted); font-weight: 500; font-size: 14px; }
+  .grp .gin { background: var(--green); color: #fff; border-radius: 999px; font-size: 12px; padding: 2px 8px; font-weight: 650; }
+  .grp.open { border-bottom-left-radius: 0; border-bottom-right-radius: 0; margin-bottom: 0; }
+  .grpbody { border: 1px solid var(--line); border-top: 0; border-radius: 0 0 12px 12px; background: var(--card); overflow: hidden; }
+  .grpbody .row:last-child { border-bottom: 0; }
+  /* view toggle */
+  .vt { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; flex: none; }
+  .vt button { border: 0; background: var(--bg); color: var(--muted); font-size: 18px; padding: 8px 12px; }
+  .vt button.on { background: var(--green); color: #fff; }
+  /* box view */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; padding: 8px; }
+  .box { position: relative; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 8px; min-height: 92px;
+    display: flex; flex-direction: column; justify-content: space-between; gap: 6px; }
+  .box.in { border-color: var(--green); background: var(--green-soft); }
+  .bname { font-size: 13px; line-height: 1.2; padding-right: 12px; overflow-wrap: break-word; word-break: normal; }
+  .bunit { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .bfoot { display: flex; align-items: center; justify-content: flex-end; }
+  .box .edit { position: absolute; top: -2px; right: -2px; padding: 4px 6px; font-size: 14px; }
+  /* stepper */
+  .qty { display: flex; align-items: center; gap: 2px; flex: none; }
+  .qty button { width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--line); background: var(--bg);
+    font-size: 19px; color: var(--ink); padding: 0; }
+  .qty button.plus { background: var(--green); border-color: var(--green); color: #fff; }
+  .qty .val { text-align: center; font-weight: 650; font-size: 16px; background: none; border: 0; width: 52px; padding: 0; color: var(--ink); }
+  .qty.compact button { width: 26px; height: 30px; font-size: 16px; }
+  .qty.compact .val { width: 32px; font-size: 14px; }
+  .addcircle { width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid var(--green); color: var(--gt); background: var(--field);
+    font-size: 22px; line-height: 1; padding: 0; flex: none; }
+  .addcircle:active { background: var(--green-soft); }
+  .pill { border: 1.5px solid var(--green); color: var(--gt); background: var(--field); border-radius: 999px; padding: 7px 14px; font-size: 14px; font-weight: 650; flex: none; }
+  .pill:active { background: var(--green-soft); }
+  /* list rows */
+  .lrow { padding: 10px 10px 10px 12px; border-bottom: 1px solid var(--line); }
+  .lrow:last-child { border-bottom: 0; }
+  .ltop { display: flex; align-items: center; gap: 8px; }
+  .check { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--ring); flex: none; display: grid; place-items: center;
+    background: var(--field); color: #fff; font-size: 15px; }
+  .done .check { background: var(--green); border-color: var(--green); }
+  .done .nm { text-decoration: line-through; color: var(--muted); }
+  .pri { display: inline-block; margin-top: 3px; font-size: 11px; border-radius: 999px; padding: 2px 8px; border: 1px solid var(--line);
+    background: none; color: var(--muted); }
+  .pri.p1 { color: var(--gt); border-color: var(--green); font-weight: 650; }
+  .pri.p3 { border-style: dashed; }
+  .lprice { display: flex; align-items: center; gap: 8px; margin: 8px 0 0 34px; flex-wrap: wrap; }
+  .lprice .peso { color: var(--muted); font-size: 15px; }
+  .lprice input { width: 84px; font-size: 15px; padding: 7px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .seg button { border: 0; background: var(--bg); padding: 7px 9px; font-size: 13px; color: var(--muted); }
+  .seg button.on { background: var(--green); color: #fff; font-weight: 650; }
+  .ltotal { margin-left: auto; font-weight: 650; font-size: 15px; }
+  .empty { text-align: center; color: var(--muted); padding: 60px 24px; line-height: 1.5; }
+  .empty b { display: block; color: var(--ink); font-size: 17px; margin-bottom: 6px; }
+  /* bars */
+  nav { position: fixed; left: 0; right: 0; bottom: 0; display: flex; background: var(--card);
+    border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); height: calc(var(--navh) + env(safe-area-inset-bottom)); z-index: 6; }
+  nav button { flex: 1; border: 0; background: none; padding: 8px 0; font-size: 13px; color: var(--muted); font-weight: 600; }
+  nav button.on { color: var(--gt); }
+  nav button .ico { display: block; font-size: 20px; margin-bottom: 2px; }
+  nav .cnt { background: var(--green); color: #fff; border-radius: 999px; font-size: 11px; padding: 1px 6px; margin-left: 4px; vertical-align: 2px; }
+  .totalbar { position: fixed; left: 0; right: 0; bottom: calc(var(--navh) + env(safe-area-inset-bottom)); background: var(--green); color: #fff;
+    display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 14px 11px; z-index: 5; }
+  .totalbar.over { background: #b3261e; }
+  .tb-left { min-width: 0; }
+  .tb-left b { font-size: 19px; }
+  .tb-left small { display: block; font-size: 12px; opacity: .92; margin-top: 1px; }
+  .prog { position: absolute; left: 0; bottom: 0; height: 3px; background: rgba(255,255,255,.85); width: 0; }
+  .cutbtn { border: 1.5px solid #fff; background: transparent; color: #fff; border-radius: 999px; padding: 8px 12px; font-size: 13px; font-weight: 650; white-space: nowrap; }
+  .fab { position: fixed; right: 16px; bottom: calc(var(--navh) + var(--barh) + 12px + env(safe-area-inset-bottom)); background: var(--green); color: #fff;
+    border: 0; border-radius: 28px; padding: 14px 20px; font-size: 15px; font-weight: 650; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
+  .toolbar { display: flex; gap: 8px; margin: 12px 0 0; flex-wrap: wrap; }
+  .btn { border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: 10px 14px; font-size: 14px; font-weight: 600; color: var(--ink); }
+  .btn.danger { color: var(--danger); }
+  /* sheet */
+  .scrim { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none; z-index: 10; }
+  .scrim.show { display: block; }
+  .sheet { position: fixed; left: 0; right: 0; bottom: 0; background: var(--card); border-radius: 18px 18px 0 0; z-index: 11;
+    padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); transform: translateY(105%); transition: transform .2s; max-height: 90%; overflow-y: auto; }
+  .sheet.show { transform: none; }
+  .sheet h2 { margin: 0 0 12px; font-size: 18px; }
+  .sheet p { color: var(--muted); font-size: 14px; line-height: 1.4; margin: 0 0 10px; }
+  label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin: 12px 0 5px; }
+  .sheet input[type=text], .sheet select { width: 100%; font-size: 16px; padding: 11px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--field); color: var(--ink); }
+  .two { display: flex; gap: 10px; } .two > div { flex: 1; }
+  .actions { display: flex; gap: 10px; margin-top: 18px; }
+  .actions .btn { flex: 1; padding: 13px; font-size: 16px; }
+  .actions .primary { background: var(--green); color: #fff; border-color: var(--green); }
+  .cutrow { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .cutrow input { width: 20px; height: 20px; flex: none; }
+  .cutrow .cn { flex: 1; min-width: 0; }
+  .cutrow .cn small { display: block; color: var(--muted); font-size: 12px; }
+  .cutrow .cs { font-weight: 650; white-space: nowrap; }
+  /* compare */
+  .bcard { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-top: 10px; }
+  .bcard .top { display: flex; gap: 8px; align-items: center; }
+  .cin { width: 100%; font-size: 16px; padding: 10px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--field); color: var(--ink); }
+  .bcard .top .cin { font-weight: 650; }
+  .bcard .rowf { display: flex; gap: 8px; margin-top: 8px; }
+  .bcard .rowf > div { flex: 1; min-width: 0; }
+  .bcard .rowf > div.u { flex: 0 0 82px; }
+  .bcard label { margin: 0 0 4px; }
+  .rescard { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-top: 10px; }
+  .resrow { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .resrow:last-of-type { border-bottom: 0; }
+  .resrow .rn { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .resrow .rn small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .resrow .rp { text-align: right; font-weight: 650; font-size: 18px; }
+  .resrow .rp small { display: block; font-size: 12px; font-weight: 400; color: var(--muted); }
+  .resrow.best .rp { color: var(--gt); }
+  .tag { display: inline-block; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 2px 8px; background: var(--green); color: #fff; margin-left: 6px; vertical-align: 2px; }
+  .verdict { margin-top: 6px; font-size: 15px; line-height: 1.4; }
+  .hint { color: var(--muted); font-size: 14px; line-height: 1.4; }
+  .toast { position: fixed; left: 50%; bottom: calc(var(--navh) + var(--barh) + 16px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: #263238; color: #fff;
+    padding: 10px 16px; border-radius: 10px; font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 20; max-width: 90%; text-align: center; }
+  .toast.show { opacity: .95; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1 id="title">My list</h1>
+    <div class="sub" id="sub"></div>
+  </div>
+  <button class="gear" id="gear" aria-label="Settings">&#9881;</button>
+</header>
+
+<div class="searchbar" id="searchbar" hidden>
+  <input id="search" type="search" placeholder="Search your items" autocomplete="off">
+  <div class="vt" id="vt">
+    <button id="vList" aria-label="List view">&#9776;</button>
+    <button id="vBox" aria-label="Box view">&#9638;</button>
+  </div>
+</div>
+
+<main id="main"></main>
+
+<div class="totalbar" id="totalbar" hidden>
+  <div class="tb-left" id="tbLeft"><b id="grand"></b><small id="tbNote"></small></div>
+  <button class="cutbtn" id="cutBtn" hidden>Suggest cuts</button>
+  <i class="prog" id="prog"></i>
+</div>
+
+<button class="fab" id="fab" hidden>+ New item</button>
+
+<nav>
+  <button id="tabList" class="on"><span class="ico">&#128722;</span>My list<span class="cnt" id="listCnt" hidden></span></button>
+  <button id="tabItems"><span class="ico">&#128218;</span>My items</button>
+  <button id="tabCompare"><span class="ico">&#129518;</span>Compare</button>
+</nav>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var CATS = ["Produce", "Meat & Fish", "Frozen", "Dairy", "Rice & Grains", "Sugar & Seasoning", "Oil & Sauces",
+    "Noodles & Pasta", "Baking", "Breakfast", "Canned & Packed", "Snacks & Drinks", "Household", "Personal Care", "Other"];
+  var UNITS = ["pc", "kg"];
+  var DIM = { g: ["w", 1], kg: ["w", 1000], ml: ["v", 1], L: ["v", 1000], pc: ["c", 1] };
+  var PESO = "₱";
+  var ROUND_TO = 20;   // kg lines priced per kg are estimates: rounded up to the nearest 20
+
+  // default shopping priority by category: 1 = must-have, 2 = normal, 3 = nice-to-have
+  var CAT_PRI = { "Produce": 1, "Meat & Fish": 1, "Rice & Grains": 1, "Sugar & Seasoning": 1, "Oil & Sauces": 1,
+    "Dairy": 2, "Frozen": 2, "Canned & Packed": 2, "Noodles & Pasta": 2, "Breakfast": 2, "Household": 2, "Personal Care": 2, "Other": 2,
+    "Baking": 3, "Snacks & Drinks": 3 };
+  var PRI_LABEL = { 1: "Must-have", 2: "Normal", 3: "Nice-to-have" };
+
+  // [category, unit, [names]]; "~" prefix = custom-entry parent (asks for a brand)
+  var SEED = [
+    ["Produce", "kg", ["Garlic", "Onion", "Tomato", "Potato", "Carrots", "Ginger", "Eggplant", "Banana", "Calamansi"]],
+    ["Produce", "pc", ["Kangkong", "Pechay", "Cabbage"]],
+    ["Meat & Fish", "kg", ["Chicken thighs", "Chicken leg", "Chicken leg quarter", "Chicken breast", "Chicken wings", "Chicken neck",
+      "Pork pigue", "Pork kasim", "Pork liempo", "Pork adobo cut", "Pork sinigang cut", "Pork ribs", "Ground pork",
+      "Ground beef", "Beef cubes (meat)", "Bangus", "Tilapia", "Galunggong", "Squid", "Shrimp"]],
+    ["Meat & Fish", "pc", ["Whole chicken"]],
+    ["Frozen", "kg", ["Hotdog", "Tocino", "Fries", "Garlic longganisa", "Skinless longganisa", "Siomai"]],
+    ["Dairy", "pc", ["Butter", "Fresh milk", "Choco milk", "Cheese", "Parmesan cheese", "Mozzarella cheese", "Margarine", "Cheese spread",
+      "Vitamilk", "Yogurt drink (Delight)", "Evaporated milk", "Condensed milk", "All-purpose cream", "Cream cheese", "Yogurt"]],
+    ["Dairy", "kg", ["Powdered milk"]],
+    ["Rice & Grains", "kg", ["Rice", "Flour"]],
+    ["Rice & Grains", "pc", ["Oats", "Cornstarch", "Bread"]],
+    ["Sugar & Seasoning", "kg", ["White sugar", "Brown sugar"]],
+    ["Sugar & Seasoning", "pc", ["Salt", "Black pepper", "Magic Sarap", "Chicken cubes (seasoning)", "Pork cubes (seasoning)",
+      "Beef cubes (seasoning)", "Sinigang mix", "Adobo mix"]],
+    ["Oil & Sauces", "pc", ["Cooking oil", "Soy sauce", "White vinegar", "Dirty vinegar", "Fish sauce", "Oyster sauce", "Banana ketchup",
+      "Mayonnaise", "Bagoong", "Tomato sauce", "Spaghetti sauce"]],
+    ["Noodles & Pasta", "pc", ["Instant noodles", "Pancit canton", "Spaghetti pasta", "Macaroni", "Bihon", "Sotanghon"]],
+    ["Baking", "pc", ["Baking powder", "Breadcrumbs", "Pancake mix"]],
+    ["Breakfast", "pc", ["Coffee", "Creamer", "Cereal", "Milo / choco powder"]],
+    ["Canned & Packed", "pc", ["Corned beef", "Meat loaf", "Vienna sausage", "Liver spread", "Sardines", "Fresca tuna", "Century tuna",
+      "San Marino tuna", "Luncheon meat", "Beef loaf", "Sweet corn", "Green peas", "Mushrooms", "Pineapple chunks", "Fruit cocktail",
+      "Coconut milk (gata)", "Coconut cream", "Baked beans"]],
+    ["Snacks & Drinks", "pc", ["Bottled water", "Soft drinks", "~Biscuits", "~Chips", "~Crackers", "~Candy", "~Chocolates", "~Nuts"]],
+    ["Household", "pc", ["Dishwashing liquid", "Laundry detergent", "Fabric conditioner", "Tissue", "Albatross", "Trash bags", "Sponge",
+      "Bleach (regular)", "Bleach (color safe)", "Toilet bowl cleaner", "Disinfectant spray", "Kitchen towel", "Aluminum foil", "Ziploc",
+      "Air freshener", "Batteries AA", "Batteries AAA", "Lighter"]],
+    ["Personal Care", "pc", ["Bath soap (his)", "Bath soap (hers)", "Deodorant (his)", "Deodorant (hers)", "Razors", "Shampoo", "Conditioner",
+      "Toothpaste", "Toothbrush", "Mouthwash", "Dental floss", "Face wash", "Body lotion", "Sunscreen", "Cotton buds", "Cotton balls",
+      "Sanitary napkins", "Feminine wash", "Hand soap", "Alcohol", "Wet wipes"]]
+  ];
+
+  var KEY = "grocery.v2";
+  var SKEY = "grocery.settings";
+  var state = load();
+  var settings = loadSettings();
+  var view = "list";
+  var query = "";
+  var openGroups = {};   // expanded catalog groups; kept in memory only, so every app launch starts collapsed
+  var lineEls = {};
+  var wasOver = null;
+
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+  function seedCatalog() {
+    var out = [];
+    SEED.forEach(function (g) {
+      g[2].forEach(function (n) {
+        var custom = n.charAt(0) === "~";
+        out.push({ id: uid(), name: custom ? n.slice(1) : n, cat: g[0], unit: g[1], kind: custom ? "custom" : undefined });
+      });
+    });
+    return out;
+  }
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (raw) {
+        var s = JSON.parse(raw);
+        if (s && Array.isArray(s.catalog) && Array.isArray(s.list)) return s;
+      }
+    } catch (e) { /* fall through */ }
+    return { catalog: seedCatalog(), list: [] };
+  }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* ignore */ } }
+
+  function loadSettings() {
+    var d = { theme: "auto", budget: null, view: "list", compare: blankCompare(2) };
+    try {
+      var s = JSON.parse(localStorage.getItem(SKEY) || "null");
+      if (s && typeof s === "object") {
+        if (["auto", "light", "dark"].indexOf(s.theme) >= 0) d.theme = s.theme;
+        if (typeof s.budget === "number" && isFinite(s.budget) && s.budget > 0) d.budget = s.budget;
+        if (s.view === "box") d.view = "box";
+        if (Array.isArray(s.compare) && s.compare.length >= 2 && s.compare.length <= 3) {
+          d.compare = s.compare.map(function (b) {
+            b = b || {};
+            return { name: String(b.name || ""), size: String(b.size || ""), unit: DIM[b.unit] ? b.unit : "g", price: String(b.price || "") };
+          });
+        }
+      }
+    } catch (e) { /* defaults */ }
+    return d;
+  }
+  function blankCompare(n) {
+    var a = []; for (var i = 0; i < n; i++) a.push({ name: "", size: "", unit: "g", price: "" });
+    return a;
+  }
+  function saveSettings() { try { localStorage.setItem(SKEY, JSON.stringify(settings)); } catch (e) { /* ignore */ } }
+
+  // ---------- theme ----------
+  var mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  function applyTheme() {
+    var dark = settings.theme === "dark" || (settings.theme === "auto" && mq && mq.matches);
+    document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+    var m = document.querySelector("meta[name=theme-color]");
+    if (m) m.setAttribute("content", dark ? "#1b4d21" : "#2e7d32");
+  }
+  if (mq) {
+    var onScheme = function () { if (settings.theme === "auto") applyTheme(); };
+    if (mq.addEventListener) mq.addEventListener("change", onScheme); else if (mq.addListener) mq.addListener(onScheme);
+  }
+
+  // ---------- helpers ----------
+  var $ = function (id) { return document.getElementById(id); };
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+  function round2(n) { return Math.round(n * 100) / 100; }
+  function fmtQty(n) { return String(round2(n)); }
+  function stepFor(unit) { return unit === "kg" ? 0.25 : 1; }
+  function parseNum(s) { var n = parseFloat(String(s).replace(",", ".")); return isFinite(n) ? n : NaN; }
+  function money(n) { return PESO + n.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function moneyWhole(n) { return PESO + Math.round(n).toLocaleString("en-PH"); }
+  function entryFor(cid) { return state.list.filter(function (l) { return l.cid === cid; })[0]; }
+  function catOf(l) { return state.catalog.filter(function (c) { return c.id === l.cid; })[0]; }
+
+  // kg items priced per kg are weighed at the store, so their total is an estimate
+  function isApprox(l) { return l.unit === "kg" && l.mode !== "total"; }
+  function lineTotal(l) {
+    var p = parseNum(l.price);
+    if (!isFinite(p) || p < 0) return null;
+    var raw = round2(l.mode === "total" ? p : p * l.qty);
+    return isApprox(l) ? Math.ceil(raw / ROUND_TO) * ROUND_TO : raw;
+  }
+  function fmtLine(l, t) { return isApprox(l) ? "~" + moneyWhole(t) : money(t); }
+
+  function priOf(l) {
+    if (l.pri) return l.pri;
+    var c = catOf(l);
+    if (c && c.pri) return c.pri;
+    return CAT_PRI[l.cat] || 2;
+  }
+
+  function toast(msg) {
+    var t = $("toast"); t.textContent = msg; t.classList.add("show");
+    clearTimeout(toast._t); toast._t = setTimeout(function () { t.classList.remove("show"); }, 2200);
+  }
+  function groupBy(items) {
+    var g = {};
+    items.forEach(function (it) { (g[it.cat] = g[it.cat] || []).push(it); });
+    return CATS.concat(Object.keys(g).filter(function (k) { return CATS.indexOf(k) < 0; }))
+      .filter(function (k) { return g[k]; }).map(function (k) { return [k, g[k]]; });
+  }
+
+  // ---------- list mutations ----------
+  function setQty(c, qty) {
+    qty = round2(qty);
+    var e = entryFor(c.id);
+    if (qty <= 0) {
+      state.list = state.list.filter(function (l) { return l.cid !== c.id; });
+    } else if (e) {
+      e.qty = qty;
+    } else {
+      state.list.push({ cid: c.id, name: c.name, cat: c.cat, unit: c.unit, qty: qty, done: false,
+        price: c.lastPrice != null ? String(c.lastPrice) : "", mode: c.lastMode || "unit", pri: c.pri || undefined });
+    }
+    save(); render();
+  }
+
+  // ---------- stepper: - [number] + ----------
+  function stepper(unit, getQty, onSet, compact) {
+    var q = el("div", "qty" + (compact ? " compact" : ""));
+    var minus = el("button", null, "−"); minus.setAttribute("aria-label", "Less");
+    var val = el("input", "val"); val.type = "text"; val.inputMode = "decimal"; val.value = fmtQty(getQty());
+    var plus = el("button", "plus", "+"); plus.setAttribute("aria-label", "More");
+    minus.onclick = function () { onSet(getQty() - stepFor(unit)); };
+    plus.onclick = function () { onSet(getQty() + stepFor(unit)); };
+    val.onfocus = function () { try { val.select(); } catch (e) {} };
+    val.onchange = function () { var n = parseNum(val.value); onSet(isFinite(n) ? n : getQty()); };
+    q.appendChild(minus); q.appendChild(val); q.appendChild(plus);
+    return q;
+  }
+
+  // ---------- render ----------
+  function render() {
+    var inList = view === "list", inItems = view === "items";
+    $("tabList").classList.toggle("on", inList);
+    $("tabItems").classList.toggle("on", inItems);
+    $("tabCompare").classList.toggle("on", view === "compare");
+    $("title").textContent = inList ? "My list" : inItems ? "My items" : "Compare";
+    $("searchbar").hidden = !inItems;
+    $("fab").hidden = !inItems;
+    $("vList").classList.toggle("on", settings.view === "list");
+    $("vBox").classList.toggle("on", settings.view === "box");
+
+    var open = state.list.filter(function (l) { return !l.done; }).length;
+    var cnt = $("listCnt"); cnt.hidden = open === 0; cnt.textContent = open;
+
+    var main = $("main"), scroll = main.scrollTop;
+    main.textContent = ""; lineEls = {};
+    if (inList) renderList(main); else if (inItems) renderCatalog(main); else renderCompare(main);
+    updateTotals();
+    main.scrollTop = scroll;
+  }
+
+  function totals() {
+    var sum = 0, cart = 0, missing = 0;
+    state.list.forEach(function (l) {
+      var t = lineTotal(l);
+      if (t == null) { missing++; return; }
+      sum += t; if (l.done) cart += t;
+    });
+    return { sum: sum, cart: cart, missing: missing };
+  }
+  function anyApprox() { return state.list.some(function (l) { return isApprox(l) && lineTotal(l) != null; }); }
+
+  function updateTotals() {
+    var bar = $("totalbar");
+    state.list.forEach(function (l) {
+      var te = lineEls[l.cid]; if (!te) return;
+      var t = lineTotal(l);
+      te.textContent = t == null ? "" : "= " + fmtLine(l, t);
+    });
+
+    var show = view !== "compare" && (state.list.length > 0 || settings.budget);
+    if (!show) {
+      bar.hidden = true; document.documentElement.style.setProperty("--barh", "0px"); wasOver = null; return;
+    }
+    var t = totals(), b = settings.budget;
+    var approx = anyApprox();
+    $("grand").textContent = (approx ? "~" + moneyWhole(t.sum) : money(t.sum));
+
+    var parts = [];
+    var over = !!b && t.sum > b;
+    if (b) parts.push(over ? moneyWhole(t.sum - b) + " over budget" : moneyWhole(b - t.sum) + " left of " + moneyWhole(b));
+    else parts.push("Tap to set a budget");
+    var checked = state.list.some(function (l) { return l.done; });
+    if (checked) parts.push("in cart " + (approx ? "~" + moneyWhole(t.cart) : money(t.cart)));
+    if (t.missing) parts.push(t.missing + (t.missing === 1 ? " item" : " items") + " unpriced");
+    $("tbNote").textContent = parts.join(" · ");
+
+    bar.classList.toggle("over", over);
+    $("prog").style.width = b ? Math.min(100, t.sum / b * 100) + "%" : "0%";
+    $("cutBtn").hidden = !over;
+    bar.hidden = false;
+    document.documentElement.style.setProperty("--barh", bar.offsetHeight + "px");
+
+    if (wasOver === false && over) toast("Over your budget — tap Suggest cuts");
+    wasOver = over;
+  }
+
+  function renderList(main) {
+    var total = state.list.length;
+    var done = state.list.filter(function (l) { return l.done; }).length;
+    $("sub").textContent = total ? (done + " of " + total + " in the cart") : "Nothing yet";
+    if (!total) {
+      var e = el("div", "empty");
+      e.appendChild(el("b", null, "Your list is empty"));
+      e.appendChild(document.createTextNode("Go to My items, open a group and tap + on anything you need to buy."));
+      main.appendChild(e);
+      return;
+    }
+    groupBy(state.list).forEach(function (g) {
+      main.appendChild(el("div", "cat", g[0]));
+      var card = el("div", "card");
+      g[1].forEach(function (l) { card.appendChild(listRow(l)); });
+      main.appendChild(card);
+    });
+    var tb = el("div", "toolbar");
+    var share = el("button", "btn", "Share list"); share.onclick = shareList; tb.appendChild(share);
+    if (done) {
+      var cc = el("button", "btn", "Clear checked");
+      cc.onclick = function () { state.list = state.list.filter(function (l) { return !l.done; }); save(); render(); };
+      tb.appendChild(cc);
+    }
+    var ca = el("button", "btn danger", "Clear all");
+    ca.onclick = function () { if (confirm("Remove everything from the list?")) { state.list = []; save(); render(); } };
+    tb.appendChild(ca);
+    main.appendChild(tb);
+  }
+
+  function listRow(l) {
+    var wrap = el("div", "lrow" + (l.done ? " done" : ""));
+    var top = el("div", "ltop");
+    var chk = el("div", "check", l.done ? "✓" : "");
+    chk.onclick = function () { l.done = !l.done; save(); render(); };
+
+    var nameBox = el("div", "name");
+    nameBox.appendChild(el("div", "nm", l.name));
+    var pri = priOf(l);
+    var chip = el("button", "pri p" + pri, PRI_LABEL[pri]);
+    chip.setAttribute("aria-label", "Priority: " + PRI_LABEL[pri] + ". Tap to change");
+    chip.onclick = function (ev) {
+      ev.stopPropagation();
+      var next = pri === 1 ? 2 : pri === 2 ? 3 : 1;
+      l.pri = next; var cc = catOf(l); if (cc) cc.pri = next;
+      save(); render();
+    };
+    nameBox.appendChild(chip);
+    nameBox.onclick = chk.onclick;
+
+    var c = catOf(l) || { id: l.cid, name: l.name, cat: l.cat, unit: l.unit };
+    var q = stepper(l.unit, function () { return l.qty; }, function (n) { setQty(c, n); });
+    var ul = el("span", "unitlbl", l.unit);
+    var rm = el("button", "edit", "✕"); rm.setAttribute("aria-label", "Remove " + l.name);
+    rm.onclick = function () { setQty(c, 0); };
+    top.appendChild(chk); top.appendChild(nameBox); top.appendChild(q); top.appendChild(ul); top.appendChild(rm);
+    wrap.appendChild(top);
+
+    var pr = el("div", "lprice");
+    pr.appendChild(el("span", "peso", PESO));
+    var inp = el("input"); inp.type = "text"; inp.inputMode = "decimal"; inp.placeholder = "Price"; inp.value = l.price || "";
+    inp.oninput = function () {
+      l.price = inp.value;
+      var cc = catOf(l);
+      if (cc) {
+        var n = parseNum(inp.value);
+        if (isFinite(n) && n >= 0) { cc.lastPrice = n; cc.lastMode = l.mode; }
+        else if (inp.value.trim() === "") { delete cc.lastPrice; delete cc.lastMode; }
+      }
+      save(); updateTotals();
+    };
+    pr.appendChild(inp);
+    var seg = el("div", "seg");
+    var b1 = el("button", l.mode === "total" ? "" : "on", "per " + l.unit);
+    var b2 = el("button", l.mode === "total" ? "on" : "", "total");
+    function setMode(m) {
+      l.mode = m; var cc = catOf(l); if (cc && cc.lastPrice != null) cc.lastMode = m;
+      b1.className = m === "total" ? "" : "on"; b2.className = m === "total" ? "on" : "";
+      save(); updateTotals();
+    }
+    b1.onclick = function () { setMode("unit"); }; b2.onclick = function () { setMode("total"); };
+    seg.appendChild(b1); seg.appendChild(b2); pr.appendChild(seg);
+    var tot = el("span", "ltotal"); lineEls[l.cid] = tot; pr.appendChild(tot);
+    wrap.appendChild(pr);
+    return wrap;
+  }
+
+  // ---------- catalog (collapsible groups, list or box view) ----------
+  function renderCatalog(main) {
+    $("sub").textContent = state.catalog.filter(function (c) { return c.kind !== "custom"; }).length + " saved items";
+    var q = query.trim().toLowerCase();
+    var items = state.catalog.filter(function (c) {
+      return !q || c.name.toLowerCase().indexOf(q) >= 0 || (c.parent && c.parent.toLowerCase().indexOf(q) >= 0);
+    });
+    if (!items.length) {
+      var e = el("div", "empty");
+      e.appendChild(el("b", null, q ? "No match" : "No items yet"));
+      e.appendChild(document.createTextNode("Tap “+ New item” to save it."));
+      main.appendChild(e);
+      return;
+    }
+    groupBy(items).forEach(function (g) {
+      var name = g[0], list = g[1];
+      var isOpen = q ? true : !!openGroups[name];
+      var inList = list.filter(function (c) { return entryFor(c.id); }).length;
+
+      var head = el("button", "grp" + (isOpen ? " open" : ""));
+      head.setAttribute("aria-expanded", isOpen ? "true" : "false");
+      head.appendChild(el("span", "chev", isOpen ? "▾" : "▸"));
+      head.appendChild(el("span", "gname", name));
+      if (inList) head.appendChild(el("span", "gin", inList + " in list"));
+      head.appendChild(el("span", "gcount", String(list.length)));
+      head.onclick = function () { openGroups[name] = !openGroups[name]; render(); };
+      main.appendChild(head);
+
+      if (!isOpen) return;
+      var body = el("div", "grpbody");
+      if (settings.view === "box") {
+        var grid = el("div", "grid");
+        list.forEach(function (c) { grid.appendChild(catalogBox(c)); });
+        body.appendChild(grid);
+      } else {
+        list.forEach(function (c) { body.appendChild(catalogRow(c)); });
+      }
+      main.appendChild(body);
+    });
+  }
+
+  function catalogRow(c) {
+    var row = el("div", "row");
+    row.appendChild(el("div", "name", c.name));
+    if (c.kind === "custom") {
+      var b = el("button", "pill", "+ Brand"); b.onclick = function () { openBrandForm(c); };
+      row.appendChild(b);
+      return row;
+    }
+    var e = entryFor(c.id);
+    if (e) {
+      row.appendChild(stepper(c.unit, function () { return e.qty; }, function (n) { setQty(c, n); }));
+      row.appendChild(el("span", "unitlbl", c.unit));
+    } else {
+      row.appendChild(el("span", "unitlbl", c.unit));
+      var a = el("button", "addcircle", "+"); a.setAttribute("aria-label", "Add " + c.name);
+      a.onclick = function () { setQty(c, stepFor(c.unit)); };
+      row.appendChild(a);
+    }
+    var ed = el("button", "edit", "✎"); ed.setAttribute("aria-label", "Edit " + c.name);
+    ed.onclick = function () { openEditor(c); };
+    row.appendChild(ed);
+    return row;
+  }
+
+  function catalogBox(c) {
+    var e = c.kind === "custom" ? null : entryFor(c.id);
+    var box = el("div", "box" + (e ? " in" : ""));
+    var top = el("div");
+    top.appendChild(el("div", "bname", c.name));
+    if (c.kind !== "custom") top.appendChild(el("div", "bunit", c.unit));
+    box.appendChild(top);
+    var foot = el("div", "bfoot");
+    if (c.kind === "custom") {
+      var b = el("button", "pill", "+ Brand"); b.onclick = function () { openBrandForm(c); };
+      foot.appendChild(b);
+    } else {
+      if (e) foot.appendChild(stepper(c.unit, function () { return e.qty; }, function (n) { setQty(c, n); }, true));
+      else {
+        var a = el("button", "addcircle", "+"); a.setAttribute("aria-label", "Add " + c.name);
+        a.onclick = function () { setQty(c, stepFor(c.unit)); };
+        foot.appendChild(a);
+      }
+      var ed = el("button", "edit", "✎"); ed.setAttribute("aria-label", "Edit " + c.name);
+      ed.onclick = function () { openEditor(c); };
+      box.appendChild(ed);
+    }
+    box.appendChild(foot);
+    return box;
+  }
+
+  // ---------- compare: which brand is the better buy? ----------
+  var UNIT_OPTS = ["g", "kg", "ml", "L", "pc"];
+  function brandLabel(b, i) { return b.name.trim() || "Brand " + "ABC".charAt(i); }
+
+  function renderCompare(main) {
+    $("sub").textContent = "Which one is the better buy?";
+    var cmp = settings.compare;
+    var res = el("div");
+
+    function calc() {
+      res.textContent = "";
+      var rows = [];
+      cmp.forEach(function (b, i) {
+        var size = parseNum(b.size), price = parseNum(b.price);
+        if (size > 0 && price >= 0) rows.push({ i: i, name: brandLabel(b, i), size: size, unit: b.unit, price: price,
+          dim: DIM[b.unit][0], base: price / (size * DIM[b.unit][1]) });
+      });
+      if (rows.length < 2) {
+        res.appendChild(el("p", "hint", "Fill in the size and price of at least two brands to compare them."));
+        return;
+      }
+      var dims = {}; rows.forEach(function (r) { dims[r.dim] = true; });
+      if (Object.keys(dims).length > 1) {
+        res.appendChild(el("p", "hint", "These can’t be compared directly: use the same kind of unit for every brand (weight, volume or pieces)."));
+        return;
+      }
+      var dim = rows[0].dim;
+      var per = dim === "w" ? { mult: 100, label: "per 100 g", mult2: 1000, label2: "per kg" }
+              : dim === "v" ? { mult: 100, label: "per 100 ml", mult2: 1000, label2: "per L" }
+              : { mult: 1, label: "per pc", mult2: null, label2: "" };
+      rows.sort(function (a, b) { return a.base - b.base; });
+      var best = rows[0];
+      var card = el("div", "rescard");
+      rows.forEach(function (r, k) {
+        var tie = Math.abs(r.base - best.base) < best.base * 0.00005;
+        var row = el("div", "resrow" + (tie ? " best" : ""));
+        var rn = el("div", "rn");
+        var nm = el("span", null, r.name); rn.appendChild(nm);
+        if (tie) rn.appendChild(el("span", "tag", "BEST VALUE"));
+        rn.appendChild(el("small", null, fmtQty(r.size) + " " + r.unit + " for " + money(r.price) +
+          (tie ? "" : " · " + (Math.round((r.base / best.base - 1) * 1000) / 10) + "% more")));
+        var rp = el("div", "rp", money(r.base * per.mult));
+        rp.appendChild(el("small", null, per.label + (per.mult2 ? " · " + money(r.base * per.mult2) + " " + per.label2 : "")));
+        row.appendChild(rn); row.appendChild(rp); card.appendChild(row);
+      });
+      var second = rows[1];
+      var tied = rows.filter(function (r) { return Math.abs(r.base - best.base) < best.base * 0.00005; });
+      if (tied.length === rows.length) {
+        card.appendChild(el("div", "verdict", "These cost the same " + per.label + "."));
+      } else if (tied.length > 1) {
+        card.appendChild(el("div", "verdict", tied.map(function (r) { return r.name; }).join(" and ") + " tie for the best price " + per.label + "."));
+      } else {
+        var diff = (second.base - best.base) * per.mult;
+        var pct = Math.round((1 - best.base / second.base) * 1000) / 10;
+        card.appendChild(el("div", "verdict", best.name + " is the better buy: " + money(diff) + " cheaper " + per.label +
+          " than " + second.name + " (" + pct + "% less)."));
+      }
+      res.appendChild(card);
+    }
+
+    cmp.forEach(function (b, i) {
+      var card = el("div", "bcard");
+      var top = el("div", "top");
+      var nm = el("input", "cin"); nm.type = "text"; nm.placeholder = "Brand " + "ABC".charAt(i); nm.value = b.name;
+      nm.oninput = function () { b.name = nm.value; saveSettings(); calc(); };
+      top.appendChild(nm);
+      if (cmp.length > 2) {
+        var rm = el("button", "edit", "✕"); rm.setAttribute("aria-label", "Remove brand");
+        rm.onclick = function () { cmp.splice(i, 1); saveSettings(); render(); };
+        top.appendChild(rm);
+      }
+      card.appendChild(top);
+
+      var rf = el("div", "rowf");
+      var d1 = el("div"); d1.appendChild(el("label", null, "Size"));
+      var sz = el("input", "cin"); sz.type = "text"; sz.inputMode = "decimal"; sz.placeholder = "300"; sz.value = b.size;
+      sz.oninput = function () { b.size = sz.value; saveSettings(); calc(); }; d1.appendChild(sz);
+      var d2 = el("div", "u"); d2.appendChild(el("label", null, "Unit"));
+      var un = el("select", "cin");
+      UNIT_OPTS.forEach(function (u) { var o = el("option", null, u); o.value = u; if (u === b.unit) o.selected = true; un.appendChild(o); });
+      un.onchange = function () { b.unit = un.value; saveSettings(); calc(); }; d2.appendChild(un);
+      var d3 = el("div"); d3.appendChild(el("label", null, "Price (" + PESO + ")"));
+      var pr = el("input", "cin"); pr.type = "text"; pr.inputMode = "decimal"; pr.placeholder = "200"; pr.value = b.price;
+      pr.oninput = function () { b.price = pr.value; saveSettings(); calc(); }; d3.appendChild(pr);
+      rf.appendChild(d1); rf.appendChild(d2); rf.appendChild(d3);
+      card.appendChild(rf);
+      main.appendChild(card);
+    });
+
+    var tb = el("div", "toolbar");
+    if (cmp.length < 3) {
+      var add = el("button", "btn", "+ Add a third brand");
+      add.onclick = function () { cmp.push({ name: "", size: "", unit: cmp[0].unit, price: "" }); saveSettings(); render(); };
+      tb.appendChild(add);
+    }
+    var clr = el("button", "btn danger", "Clear");
+    clr.onclick = function () { settings.compare = blankCompare(2); saveSettings(); render(); };
+    tb.appendChild(clr);
+    main.appendChild(tb);
+    main.appendChild(res);
+    calc();
+  }
+
+  // ---------- sheets ----------
+  function openSheet(build) {
+    var sh = $("sheet"); sh.textContent = ""; build(sh);
+    $("scrim").classList.add("show"); sh.classList.add("show");
+  }
+  function closeSheet() { $("scrim").classList.remove("show"); $("sheet").classList.remove("show"); }
+
+  function openEditor(c) {
+    var isNew = !c;
+    openSheet(function (sh) {
+      sh.appendChild(el("h2", null, isNew ? "New item" : "Edit item"));
+      sh.appendChild(el("label", null, "Name"));
+      var name = el("input"); name.type = "text"; name.value = c ? c.name : query.trim(); name.placeholder = "e.g. Rice"; sh.appendChild(name);
+      sh.appendChild(el("label", null, "Category"));
+      var cat = el("select");
+      CATS.forEach(function (k) { var o = el("option", null, k); o.value = k; if (k === (c ? c.cat : "Other")) o.selected = true; cat.appendChild(o); });
+      sh.appendChild(cat);
+      sh.appendChild(el("label", null, "Sold per"));
+      var unit = el("select");
+      UNITS.forEach(function (u) {
+        var o = el("option", null, u === "pc" ? "piece (pc)" : "kilo (kg)"); o.value = u; if (u === (c ? c.unit : "pc")) o.selected = true; unit.appendChild(o);
+      });
+      sh.appendChild(unit);
+
+      var act = el("div", "actions");
+      if (!isNew) {
+        var del = el("button", "btn danger", "Delete");
+        del.onclick = function () {
+          if (!confirm("Delete “" + c.name + "” from your items?")) return;
+          state.catalog = state.catalog.filter(function (x) { return x.id !== c.id; });
+          state.list = state.list.filter(function (l) { return l.cid !== c.id; });
+          save(); closeSheet(); render();
+        };
+        act.appendChild(del);
+      }
+      var cancel = el("button", "btn", "Cancel"); cancel.onclick = closeSheet; act.appendChild(cancel);
+      var ok = el("button", "btn primary", "Save");
+      ok.onclick = function () {
+        var nm = name.value.trim();
+        if (!nm) { name.focus(); return; }
+        if (isNew) {
+          state.catalog.push({ id: uid(), name: nm, cat: cat.value, unit: unit.value });
+        } else {
+          c.name = nm; c.cat = cat.value;
+          var e = entryFor(c.id);
+          if (c.unit !== unit.value) { c.unit = unit.value; if (e) { e.unit = unit.value; e.qty = stepFor(unit.value); } }
+          if (e) { e.name = nm; e.cat = cat.value; }
+        }
+        save(); closeSheet(); render();
+      };
+      act.appendChild(ok); sh.appendChild(act);
+      if (isNew) setTimeout(function () { name.focus(); }, 250);
+    });
+  }
+
+  // custom entry for items sold in many brands (biscuits, chips, ...)
+  function openBrandForm(parent) {
+    openSheet(function (sh) {
+      sh.appendChild(el("h2", null, "Add " + parent.name.toLowerCase()));
+      sh.appendChild(el("label", null, "Brand"));
+      var brand = el("input"); brand.type = "text"; brand.placeholder = "e.g. Piattos"; sh.appendChild(brand);
+
+      var two = el("div", "two");
+      var d1 = el("div"); d1.appendChild(el("label", null, "Pieces"));
+      var qty = el("input"); qty.type = "text"; qty.inputMode = "decimal"; qty.value = "1"; d1.appendChild(qty);
+      var d2 = el("div"); d2.appendChild(el("label", null, "Price (" + PESO + ")"));
+      var price = el("input"); price.type = "text"; price.inputMode = "decimal"; price.placeholder = "optional"; d2.appendChild(price);
+      two.appendChild(d1); two.appendChild(d2); sh.appendChild(two);
+
+      sh.appendChild(el("label", null, "Price is"));
+      var mode = "unit";
+      var seg = el("div", "seg");
+      var b1 = el("button", "on", "per pc"), b2 = el("button", "", "total");
+      b1.onclick = function () { mode = "unit"; b1.className = "on"; b2.className = ""; };
+      b2.onclick = function () { mode = "total"; b2.className = "on"; b1.className = ""; };
+      seg.appendChild(b1); seg.appendChild(b2); sh.appendChild(seg);
+
+      var act = el("div", "actions");
+      var cancel = el("button", "btn", "Cancel"); cancel.onclick = closeSheet; act.appendChild(cancel);
+      var ok = el("button", "btn primary", "Add to list");
+      ok.onclick = function () {
+        var b = brand.value.trim();
+        if (!b) { brand.focus(); return; }
+        var n = parseNum(qty.value); if (!isFinite(n) || n <= 0) n = 1;
+        var full = parent.name + " – " + b;
+        var item = state.catalog.filter(function (c) { return c.name.toLowerCase() === full.toLowerCase(); })[0];
+        if (!item) {
+          item = { id: uid(), name: full, cat: parent.cat, unit: "pc", parent: parent.name };
+          state.catalog.push(item);
+        }
+        var p = parseNum(price.value);
+        if (isFinite(p) && p >= 0) { item.lastPrice = p; item.lastMode = mode; }
+        var e = entryFor(item.id);
+        if (e) { e.qty = n; e.done = false; }
+        else state.list.push({ cid: item.id, name: item.name, cat: item.cat, unit: "pc", qty: n, done: false, price: "", mode: "unit" });
+        e = entryFor(item.id);
+        if (isFinite(p) && p >= 0) { e.price = String(p); e.mode = mode; }
+        save(); closeSheet(); render(); toast("Added " + item.name);
+      };
+      act.appendChild(ok); sh.appendChild(act);
+      setTimeout(function () { brand.focus(); }, 250);
+    });
+  }
+
+  // ---------- settings: budget + theme ----------
+  function openSettings() {
+    openSheet(function (sh) {
+      sh.appendChild(el("h2", null, "Settings"));
+      sh.appendChild(el("label", null, "Max budget (" + PESO + ")"));
+      var bud = el("input"); bud.type = "text"; bud.inputMode = "decimal"; bud.placeholder = "No budget set";
+      bud.value = settings.budget ? String(settings.budget) : ""; bud.id = "budgetInput"; sh.appendChild(bud);
+      sh.appendChild(el("label", null, "Appearance"));
+      var seg = el("div", "seg");
+      [["auto", "Auto"], ["light", "Light"], ["dark", "Dark"]].forEach(function (t) {
+        var b = el("button", settings.theme === t[0] ? "on" : "", t[1]);
+        b.onclick = function () {
+          settings.theme = t[0]; saveSettings(); applyTheme();
+          Array.prototype.forEach.call(seg.children, function (x) { x.className = ""; }); b.className = "on";
+        };
+        seg.appendChild(b);
+      });
+      sh.appendChild(seg);
+      var act = el("div", "actions");
+      var close = el("button", "btn", "Cancel"); close.onclick = closeSheet; act.appendChild(close);
+      var ok = el("button", "btn primary", "Save");
+      ok.onclick = function () {
+        var n = parseNum(bud.value);
+        settings.budget = isFinite(n) && n > 0 ? n : null;
+        saveSettings(); closeSheet(); wasOver = null; render();
+      };
+      act.appendChild(ok); sh.appendChild(act);
+    });
+  }
+
+  // ---------- suggest cuts ----------
+  function planCuts() {
+    var t = totals(), b = settings.budget;
+    var need = t.sum - b;
+    var cands = state.list.filter(function (l) { return !l.done && (lineTotal(l) || 0) > 0 && priOf(l) > 1; })
+      .map(function (l) { return { l: l, t: lineTotal(l), p: priOf(l) }; });
+    var picked = [], saved = 0;
+    [3, 2].forEach(function (tier) {
+      var pool = cands.filter(function (c) { return c.p === tier; }).sort(function (a, b2) { return b2.t - a.t; });
+      while (saved < need && pool.length) {
+        var remaining = need - saved;
+        var exact = pool.filter(function (c) { return c.t >= remaining; }).pop();   // smallest that covers the rest
+        var c = exact || pool[0];
+        pool.splice(pool.indexOf(c), 1);
+        picked.push(c); saved += c.t;
+      }
+    });
+    return { need: need, picked: picked, saved: saved };
+  }
+
+  function openCuts() {
+    var plan = planCuts();
+    openSheet(function (sh) {
+      sh.appendChild(el("h2", null, moneyWhole(plan.need) + " over budget"));
+      if (!plan.picked.length) {
+        sh.appendChild(el("p", null, "Nothing left to suggest: everything priced on your list is marked must-have, already in your cart, or has no price yet. Tap the small tag under an item to change its priority."));
+        var a0 = el("div", "actions"); var c0 = el("button", "btn", "Close"); c0.onclick = closeSheet; a0.appendChild(c0); sh.appendChild(a0);
+        return;
+      }
+      sh.appendChild(el("p", null, "Lowest priority first, biggest savings first. Untick anything you want to keep."));
+      var sel = plan.picked.map(function () { return true; });
+      var summary = el("p");
+      var rows = el("div");
+      plan.picked.forEach(function (c, i) {
+        var r = el("label", "cutrow");
+        r.style.cssText = "text-transform:none;letter-spacing:0;font-size:16px;font-weight:400;color:inherit;margin:0";
+        var cb = el("input"); cb.type = "checkbox"; cb.checked = true;
+        cb.onchange = function () { sel[i] = cb.checked; refresh(); };
+        var cn = el("div", "cn", c.l.name);
+        cn.appendChild(el("small", null, fmtQty(c.l.qty) + " " + c.l.unit + " · " + PRI_LABEL[c.p]));
+        r.appendChild(cb); r.appendChild(cn); r.appendChild(el("div", "cs", fmtLine(c.l, c.t)));
+        rows.appendChild(r);
+      });
+      sh.appendChild(rows); sh.appendChild(summary);
+      function refresh() {
+        var s = 0; plan.picked.forEach(function (c, i) { if (sel[i]) s += c.t; });
+        var left = plan.need - s;
+        summary.textContent = "Saves " + moneyWhole(s) + (left > 0
+          ? " — still " + moneyWhole(left) + " over."
+          : " — back under budget.");
+        summary.style.marginTop = "12px";
+      }
+      refresh();
+      var act = el("div", "actions");
+      var cancel = el("button", "btn", "Keep all"); cancel.onclick = closeSheet; act.appendChild(cancel);
+      var ok = el("button", "btn primary", "Remove selected");
+      ok.onclick = function () {
+        var drop = {};
+        plan.picked.forEach(function (c, i) { if (sel[i]) drop[c.l.cid] = true; });
+        state.list = state.list.filter(function (l) { return !drop[l.cid]; });
+        save(); closeSheet(); render();
+      };
+      act.appendChild(ok); sh.appendChild(act);
+    });
+  }
+
+  // ---------- share ----------
+  function shareList() {
+    var lines = ["Grocery list"], sum = 0, ap = false;
+    groupBy(state.list).forEach(function (g) {
+      lines.push("", g[0] + ":");
+      g[1].forEach(function (l) {
+        var t = lineTotal(l); if (t != null) { sum += t; if (isApprox(l)) ap = true; }
+        lines.push((l.done ? "[x] " : "[ ] ") + l.name + " - " + fmtQty(l.qty) + " " + l.unit + (t != null ? " (" + fmtLine(l, t) + ")" : ""));
+      });
+    });
+    if (sum > 0) lines.push("", "Total: " + (ap ? "~" + moneyWhole(sum) : money(sum)));
+    if (settings.budget) lines.push("Budget: " + moneyWhole(settings.budget));
+    var text = lines.join("\n");
+    if (navigator.share) navigator.share({ title: "Grocery list", text: text }).catch(function () {});
+    else if (navigator.clipboard) navigator.clipboard.writeText(text).then(function () { toast("List copied"); }, function () { toast("Couldn't copy"); });
+    else toast("Sharing not supported here");
+  }
+
+  // ---------- wire up ----------
+  $("tabList").onclick = function () { view = "list"; render(); };
+  $("tabItems").onclick = function () { view = "items"; render(); };
+  $("tabCompare").onclick = function () { view = "compare"; render(); };
+  $("fab").onclick = function () { openEditor(null); };
+  $("scrim").onclick = closeSheet;
+  $("gear").onclick = openSettings;
+  $("tbLeft").onclick = openSettings;
+  $("cutBtn").onclick = openCuts;
+  $("vList").onclick = function () { settings.view = "list"; saveSettings(); render(); };
+  $("vBox").onclick = function () { settings.view = "box"; saveSettings(); render(); };
+  $("search").addEventListener("input", function (e) { query = e.target.value; render(); });
+
+  applyTheme();
+  render();
+})();
+</script>
+</body>
+</html>

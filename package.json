@@ -1,0 +1,14 @@
+{
+  "name": "abbys-cart",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Abby’s Cart: personal grocery list with a saved item catalog",
+  "dependencies": {
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/core": "^6.1.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.1.2",
+    "@capacitor/assets": "^3.0.5"
+  }
+}
